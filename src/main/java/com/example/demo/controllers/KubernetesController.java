@@ -1,8 +1,8 @@
 package com.example.demo.controllers;
 
+import com.example.demo.entities.DeploymentInfo;
 import com.example.demo.services.KubernetesService;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.kubernetes.client.openapi.models.V1Namespace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,15 +16,11 @@ public class KubernetesController {
     KubernetesService kubernetesService;
 
 
-        @GetMapping("/namespaces")
-    public List<Namespace> getNamespaces() {
+    @GetMapping("/namespaces")
+    public List<V1Namespace> getNamespaces() {
         return kubernetesService.getNamespaces();
     }
 
-    @GetMapping("/nodes")
-    public void getNodes() {
-        kubernetesService.getNodes();
-    }
 
     @GetMapping("/releases")
     public List<String> getReleasesInNamespaces() {
@@ -32,7 +28,7 @@ public class KubernetesController {
     }
 
     @GetMapping("/infosrelease/{namespace}")
-    public DeploymentList getReleasesInformation(@PathVariable String namespace) {
+    public List<DeploymentInfo> getReleasesInformation(@PathVariable String namespace) {
         return kubernetesService.getReleasesInformation(namespace);
     }
 }

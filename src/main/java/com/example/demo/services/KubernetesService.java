@@ -1,71 +1,85 @@
 package com.example.demo.services;
 
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.Node;
-import io.fabric8.kubernetes.api.model.NodeList;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.apps.DeploymentList;
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import com.example.demo.entities.DeploymentInfo;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1DeploymentList;
+import io.kubernetes.client.openapi.models.V1Namespace;
+import io.kubernetes.client.openapi.models.V1NamespaceList;
+import io.kubernetes.client.util.ClientBuilder;
+import io.kubernetes.client.util.KubeConfig;
 import org.springframework.stereotype.Service;
 
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class KubernetesService {
-    public List<Namespace> getNamespaces() {
-        Config config = new ConfigBuilder().build();
+    public List<V1Namespace> getNamespaces() {
+        List<V1Namespace> namespaces = new ArrayList<>();
+        try {
+            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("src/main/resources/config"));
+            ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
 
-
-        try (KubernetesClient client = new DefaultKubernetesClient(config)) {
-            return client.namespaces().list().getItems();
+            Configuration.setDefaultApiClient(client);
+            CoreV1Api api = new CoreV1Api(client);
+            V1NamespaceList namespaceList = api.listNamespace(null, null, null, null, null, null, null, null, null, null);
+            namespaces.addAll(namespaceList.getItems());
+        } catch (IOException | ApiException e) {
+            e.printStackTrace();
         }
-    }
-
-    public void getNodes() {
-        try (KubernetesClient client = new DefaultKubernetesClient()) {
-            NodeList nodeList = client.nodes().list();
-            for (Node node : nodeList.getItems()) {
-                // Process each node as needed
-                String nodeName = node.getMetadata().getName();
-                System.out.println("Node Name: " + nodeName);
-            }
-        } catch (Exception e) {
-            // Handle any exceptions
-        }
+        return namespaces;
     }
 
     public List<String> getReleasesInNamespaces() {
         List<String> releases = new ArrayList<>();
-
-        try (KubernetesClient kubeClient = new DefaultKubernetesClient()) {
-            DeploymentList deploymentList = kubeClient.apps().deployments().inAnyNamespace().list();
+        try {
+            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("src/main/resources/config"));
+            ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
+            AppsV1Api api = new AppsV1Api();
+            V1DeploymentList deploymentList = api.listDeploymentForAllNamespaces(null, null, null, null, null, null, null, null, null, null);
             deploymentList.getItems().forEach(deployment -> {
-                ObjectMeta metadata = deployment.getMetadata();
-                String releaseName = metadata.getName();
-                String namespace = metadata.getNamespace();
+                String releaseName = deployment.getMetadata().getName();
+                String namespace = deployment.getMetadata().getNamespace();
                 String releaseInfo = "Release Name: " + releaseName + ", Namespace: " + namespace;
                 releases.add(releaseInfo);
             });
-        } catch (Exception e) {
-            // Handle any exceptions
+        } catch (IOException | ApiException e) {
+            e.printStackTrace();
         }
-
         return releases;
     }
 
-    public DeploymentList getReleasesInformation(String namespace) {
-        try (KubernetesClient kubeClient = new DefaultKubernetesClient()) {
-            return kubeClient.apps().deployments().inNamespace(namespace).list();
-        } catch (Exception e) {
-            // Handle the exception
-            e.printStackTrace();
-            return null;
-        }
-    }
 
+    public List<DeploymentInfo> getReleasesInformation(String namespace) {
+        List<DeploymentInfo> deployments = new ArrayList<>();
+        try {
+            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("src/main/resources/config"));
+            ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
+            Configuration.setDefaultApiClient(client);
+
+            AppsV1Api api = new AppsV1Api(client);
+            V1DeploymentList deploymentList = api.listNamespacedDeployment(namespace, null, null, null, null, null, null, null, null, null, null);
+
+            for (V1Deployment deployment : deploymentList.getItems()) {
+                DeploymentInfo deploymentInfo = new DeploymentInfo();
+                System.out.println(deployment);
+                deploymentInfo.setReleaseName(deployment.getMetadata().getName());
+                deploymentInfo.setNamespace(deployment.getMetadata().getNamespace());
+                deployments.add(deploymentInfo);
+            }
+        } catch (ApiException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return deployments;
+    }
 
 }
