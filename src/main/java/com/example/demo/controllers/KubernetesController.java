@@ -12,8 +12,13 @@ import java.util.List;
 
 @RestController
 public class KubernetesController {
+    private final KubernetesService kubernetesService;
+
     @Autowired
-    KubernetesService kubernetesService;
+    public KubernetesController(KubernetesService kubernetesService) {
+        this.kubernetesService = kubernetesService;
+    }
+
 
 
     @GetMapping("/namespaces")
