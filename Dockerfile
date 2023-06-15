@@ -7,6 +7,9 @@ ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS JAVA_OPTS=""
 # Set the working directory to /app
 WORKDIR /app
 
+# Copy the contents of src/main/resources into the container at /app/resources
+COPY src/main/resources/config /app/resources
+
 # Copy the executable into the container at /app
 COPY target/*.jar app.jar
 

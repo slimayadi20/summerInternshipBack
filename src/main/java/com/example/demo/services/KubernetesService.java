@@ -24,7 +24,8 @@ public class KubernetesService {
     public List<V1Namespace> getNamespaces() {
         List<V1Namespace> namespaces = new ArrayList<>();
         try {
-            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("src/main/resources/config"));
+            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("resources/config"));
+            System.out.println("Kubeconfig file loaded successfully!"); // Print statement
             ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
 
             Configuration.setDefaultApiClient(client);
@@ -37,10 +38,11 @@ public class KubernetesService {
         return namespaces;
     }
 
+
     public List<String> getReleasesInNamespaces() {
         List<String> releases = new ArrayList<>();
         try {
-            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("src/main/resources/config"));
+            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("resources/config"));
             ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
             AppsV1Api api = new AppsV1Api();
             V1DeploymentList deploymentList = api.listDeploymentForAllNamespaces(null, null, null, null, null, null, null, null, null, null);
@@ -60,7 +62,7 @@ public class KubernetesService {
     public List<DeploymentInfo> getReleasesInformation(String namespace) {
         List<DeploymentInfo> deployments = new ArrayList<>();
         try {
-            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("src/main/resources/config"));
+            KubeConfig kubeConfig = KubeConfig.loadKubeConfig(new FileReader("resources/config"));
             ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
             Configuration.setDefaultApiClient(client);
 
