@@ -4,6 +4,8 @@ import com.example.demo.entities.DeploymentInfo;
 import com.example.demo.services.KubernetesService;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000") // Allow requests from this origin
 public class KubernetesController {
     private final KubernetesService kubernetesService;
 
